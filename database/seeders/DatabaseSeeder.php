@@ -22,6 +22,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
         SeederWarung::class,
-    ]);
+        ]);
     }
 }
