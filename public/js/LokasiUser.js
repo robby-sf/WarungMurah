@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     .then(response => response.json())
                     .then(data =>{
                         console.log("Respon dari server:", data); //sementara
-                        resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                        result.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 
                     })
                     .catch(error =>{
