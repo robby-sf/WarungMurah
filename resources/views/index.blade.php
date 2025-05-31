@@ -1,50 +1,36 @@
-<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Tempat Makan</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>Rekomendasi Tempat Makan</title>
     @vite('resources/css/app.css')
-
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="font-sans leading-relaxed bg-[#0d1117] text-[#f0f6fc]">
+    <script src="{{ asset('js/lokasiUser.js') }}"></script>
 
-    <nav class="bg-white shadow-md py-4 px-6">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-blue-600">Rekomendasi Makan A*</h1>
-            <a href="/" class="text-blue-500 hover:text-blue-700">Home</a>
+    <header class="py-10 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-[#8b5cf6]">WarungMurah</h1>
+        <p class="text-lg mt-2 text-[#9ca3af]">Temukan rekomendasi tempat makan murah terbaik di sekitarmu.</p>
+    </header>
+
+    <section class="py-16 text-center bg-[#161b22]">
+        <h2 class="text-3xl font-semibold mb-6">Rekomendasi Untukmu</h2>
+        <button id="UserLocation" class="px-6 py-3 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-medium rounded-lg transition">
+            Cari Rekomendasi
+        </button>
+        <div id="result" class="mt-8">
         </div>
-    </nav>
+    </section>
 
-    <main class="container mx-auto px-4 py-8">
-        <h2 class="text-3xl font-semibold text-center mb-8">Daftar Tempat Makan</h2>
-
-        <div class="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach ($warung as $warung)
-                <div class="bg-white rounded-2xl shadow p-6 hover:shadow-lg transition">
-                    <h3 class="text-xl font-bold text-blue-700">{{ $warung->name }}</h3>
-                    <p class="mt-2 text-gray-600 text-sm">📍 Latitude: {{ $warung->latitude }}, Longitude: {{ $warung->longitude }}</p>
-                    <p class="text-gray-600 text-sm">⭐ Rating: {{ $warung->rating }}/5</p>
-                    <p class="text-gray-600 text-sm">
-                        💰 Harga:
-                        @if ($warung->price == 1)
-                            Murah
-                        @elseif ($warung->price == 2)
-                            Sedang
-                        @else
-                            Mahal
-                        @endif
-                    </p>
-                    <p class="text-gray-600 text-sm">🚗 Akses Jalan: {{ $warung->accessibility }}/10</p>
-                </div>
-            @endforeach
+    <section class="py-16 px-4 bg-[#0d1117]">
+        <h2 class="text-3xl font-semibold text-center mb-6">Peta Lokasi</h2>
+        <div class="w-full h-[400px] rounded-xl overflow-hidden shadow-lg" id="map">
         </div>
-    </main>
+    </section>
 
-    <footer class="bg-white shadow-md mt-12">
-        <div class="container mx-auto px-4 py-6 text-center text-sm text-gray-500">
-            &copy; {{ date('Y') }} Rekomendasi Tempat Makan dengan A* Search
-        </div>
+    <footer class="text-center text-sm py-6 mt-10 text-[#9ca3af] border-t border-[#2d333b]">
+        &copy; 2025 WarungMurah. Dibuat dengan ❤️ dan Algoritma A*.
     </footer>
 
 </body>
