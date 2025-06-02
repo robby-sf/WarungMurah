@@ -16,7 +16,7 @@ return new class extends Migration
             $table->decimal('longitude', 10, 7);
             $table->decimal('rating'); 
             $table->integer('price'); // 1 = murah, 2 = sedang, 3 = mahal
-            $table->integer('accessibility'); // kemudahan akses jalan dari 1-10
+            $table->decimal('accessibility'); // kemudahan akses jalan dari 1-10
             $table->timestamps();
         });
     }

@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\DataWarung; // opsional, dulu
+use App\Models\Warung; 
 
 class WarungController extends Controller
 {
     public function index()
     {
-        return view('index'); 
+        $warung = DataWarung::all();
+        return view('index',compact('warung')); 
     }
 
     public function lokasi(Request $request)
@@ -17,12 +19,12 @@ class WarungController extends Controller
         $lat = $request->latitude;
         $lng = $request->longitude;
 
-        // Cek data
+        $warung = DataWarung::all();
         return response()->json([
             'status' => 'success',
-            'latitude' => $lat,
-            'longitude' => $lng,
-            //buat warung ntar
+            'user_lat' => $lat,
+            'user_lng' => $lng,
+            // 'warung' => $warung
         ]);
     }
 }

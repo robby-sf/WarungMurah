@@ -4,10 +4,23 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Rekomendasi Tempat Makan</title>
-    @vite('resources/css/app.css')
+    @vite(['resources/css/app.css','resources/js/LokasiUser.js', 'resources/js/Map.js'])
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
 </head>
+
+
 <body class="font-sans leading-relaxed bg-[#0d1117] text-[#f0f6fc]">
-    <script src="{{ asset('js/lokasiUser.js') }}"></script>
+    <script>
+        window.appData = {
+            userLat: {{ $user_lat ?? -7.5576139 }},
+            userLng: {{ $user_lng ?? 110.8557427 }},
+            warung: @json($warung)
+        };
+    </script>
 
     <header class="py-10 text-center">
         <h1 class="text-4xl md:text-5xl font-bold text-[#8b5cf6]">WarungMurah</h1>
@@ -25,7 +38,7 @@
 
     <section class="py-16 px-4 bg-[#0d1117]">
         <h2 class="text-3xl font-semibold text-center mb-6">Peta Lokasi</h2>
-        <div class="w-full h-[400px] rounded-xl overflow-hidden shadow-lg" id="map">
+        <div class="w-full h-[300px] rounded-xl overflow-hidden shadow-lg" id="map">
         </div>
     </section>
 
