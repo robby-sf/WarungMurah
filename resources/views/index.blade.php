@@ -22,6 +22,8 @@
         };
     </script>
 
+    {{-- yyu --}}
+
     <header class="py-10 text-center">
         <h1 class="text-4xl md:text-5xl font-bold text-[#8b5cf6]">WarungMurah</h1>
         <p class="text-lg mt-2 text-[#9ca3af]">Temukan rekomendasi tempat makan murah terbaik di sekitarmu.</p>
