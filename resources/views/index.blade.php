@@ -22,8 +22,6 @@
         };
     </script>
 
-    {{-- yyu --}}
-
     <header class="py-10 text-center">
         <h1 class="text-4xl md:text-5xl font-bold text-[#8b5cf6]">WarungMurah</h1>
         <p class="text-lg mt-2 text-[#9ca3af]">Temukan rekomendasi tempat makan murah terbaik di sekitarmu.</p>
@@ -40,7 +38,7 @@
 
     <section class="py-16 px-4 bg-[#0d1117]">
         <h2 class="text-3xl font-semibold text-center mb-6">Peta Lokasi</h2>
-        <div class="w-full h-[300px] rounded-xl overflow-hidden shadow-lg" id="map">
+        <div class="w-full h-[600px] rounded-xl overflow-hidden shadow-lg" id="map">
         </div>
     </section>
 

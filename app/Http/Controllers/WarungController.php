@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\DataWarung; // opsional, dulu
 use App\Models\Warung; 
+use App\Services\Astar\SkorWarung;
 
 class WarungController extends Controller
 {
@@ -26,5 +27,21 @@ class WarungController extends Controller
             'user_lng' => $lng,
             // 'warung' => $warung
         ]);
+    }
+
+    public function cari(Request $request)
+    {
+        $userLat = $request->input('lat');
+        $userLng = $request->input('lng');
+        $warungs = DataWarung::all();
+
+        $best = SkorWarung::cari($userLat, $userLng, $warungs);
+
+        
+        dd([
+            'User Location' => ['lat' => $userLat, 'lng' => $userLng],
+            'Best Warung' => $best,
+        ]);
+        // return response()->json($best);
     }
 }
