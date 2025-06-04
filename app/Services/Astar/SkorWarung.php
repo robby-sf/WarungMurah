@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Services\Astar;
+use Illuminate\Support\Facades\Log;
+
 
 class SkorWarung {
 
@@ -12,7 +14,13 @@ class SkorWarung {
         $aksesScore = $warung->accessibility / 10;
         $jarakScore = 1 - min(1, $jarak / $maxJarak);
 
-        return ($hargaScore*0.3) + ($ratingScore*0.3) + ($aksesScore*0.2) + ($jarakScore*0.2);
+        
+        
+        $score = ($hargaScore*0.3) + ($jarakScore*0.3) + ($aksesScore*0.2) + ($ratingScore*0.2);
+        Log::info("ini Scoring");
+        // Log::info("Scoring Warung: {$warung->name}, Score: {$score}, User: {$userlatitude},{$userlongitude}");
+
+        return $score;
     }
 
     public static function Haversine($latitude1,$longitude1,$latitude2,$longitude2){
@@ -31,7 +39,7 @@ class SkorWarung {
     public static function cari($userlatitude,$userlongitude,$warungs){
         $bestScore = -INF;
         $bestWarung = null;
-        $maxJarak = 100; //km
+        $maxJarak = 10; //km
 
         foreach($warungs as $warung){
             $score = self::TotalScore($warung, $userlatitude, $userlongitude,$maxJarak);
@@ -40,6 +48,8 @@ class SkorWarung {
                 $bestWarung = $warung;
             }
         }
+
+        Log::info("Mengembalikan warung terbaik:", ['name' => optional($bestWarung)->name]);
 
         return $bestWarung;
 

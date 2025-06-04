@@ -65,6 +65,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         }
 
+                        fetch(`/cari?lat=${userLat}&lng=${userLng}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const hasilDiv = document.getElementById('result');
+
+
+                            if (data.warung_terbaik) {
+                                hasilDiv.innerHTML = `
+                                    <p><strong>Warung Terbaik:</strong> ${data.warung_terbaik.name}</p>
+                                    <p>Harga: ${data.warung_terbaik.price}</p>
+                                    <p>Rating: ${data.warung_terbaik.rating}</p>
+                                    <p>Aksesibilitas: ${data.warung_terbaik.accessibility}</p>
+                                    <p>Lokasi: (${data.warung_terbaik.latitude}, ${data.warung_terbaik.longitude})</p>
+                                `;
+                            } else {
+                                hasilDiv.innerHTML = `<p><strong>Tidak ada warung yang ditemukan.</strong></p>`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Terjadi kesalahan saat mengambil data rekomendasi:", error);
+                            const hasilDiv = document.getElementById('result-search');
+                            hasilDiv.innerHTML = `<p><strong>Gagal mendapatkan rekomendasi. Silakan coba lagi nanti.</strong></p>`;
+                        });
+
+
                         
                     });
 
