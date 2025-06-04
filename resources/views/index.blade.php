@@ -45,7 +45,7 @@
     </section>
 
     <footer class="text-center text-sm py-6 mt-10 text-[#9ca3af] border-t border-[#2d333b]">
-        &copy; 2025 WarungMurah. Dibuat dengan ❤️ dan Algoritma A*.
+        &copy; 2025 WarungMurah. Made with love :<.
     </footer>
 
 </body>

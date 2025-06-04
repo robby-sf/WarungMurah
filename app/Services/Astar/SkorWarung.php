@@ -6,18 +6,18 @@ use Illuminate\Support\Facades\Log;
 
 class SkorWarung {
 
-    public static function TotalScore($warung, $userlatitude, $userlongitude,$maxJarak){
-        $jarak = self::Haversine($userlatitude, $userlongitude, $warung->latitude, $warung->longitude);
+    public static function TotalScore($warung, $jarak){
+        $k= -0.4;
 
         $hargaScore = 1 - (($warung->price - 1)/2);
         $ratingScore = $warung->rating / 5;
         $aksesScore = $warung->accessibility / 10;
-        $jarakScore = 1 - min(1, $jarak / $maxJarak);
+        $jarakScore = exp($k*$jarak);
 
         
         
         $score = ($hargaScore*0.3) + ($jarakScore*0.3) + ($aksesScore*0.2) + ($ratingScore*0.2);
-        Log::info("ini Scoring");
+        // Log::info("ini Scoring");
         // Log::info("Scoring Warung: {$warung->name}, Score: {$score}, User: {$userlatitude},{$userlongitude}");
 
         return $score;
@@ -39,17 +39,30 @@ class SkorWarung {
     public static function cari($userlatitude,$userlongitude,$warungs){
         $bestScore = -INF;
         $bestWarung = null;
-        $maxJarak = 10; //km
+        $maxJarak = 17; 
+
+        
 
         foreach($warungs as $warung){
-            $score = self::TotalScore($warung, $userlatitude, $userlongitude,$maxJarak);
+            $jarak = self::Haversine($userlatitude, $userlongitude, $warung->latitude, $warung->longitude);
+
+            if($jarak>$maxJarak){
+                continue;
+            }
+
+            $score = self::TotalScore($warung, $jarak);
             if($score > $bestScore){
                 $bestScore = $score;
                 $bestWarung = $warung;
             }
         }
 
-        Log::info("Mengembalikan warung terbaik:", ['name' => optional($bestWarung)->name]);
+        Log::info("Mengembalikan warung terbaik:", ['name' => optional($bestWarung)->name,
+        'skor'=> optional($bestWarung)->score]);
+        if (!$bestWarung) {
+            Log::info("Tidak ada warung dalam radius {$maxJarak} km");
+            return null;
+        }
 
         return $bestWarung;
 
