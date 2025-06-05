@@ -13,8 +13,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function (position) {
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
+                    // const latitude = position.coords.latitude;
+                    // const longitude = position.coords.longitude;
+                    const latitude = -7.5520278;
+                    const longitude = 110.8530556;
 
                     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
