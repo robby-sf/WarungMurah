@@ -1,3 +1,21 @@
+let currentRoutePolyline = null;
+function drawRoute(path, nodesMap) {
+    if (currentRoutePolyline) {
+        map.removeLayer(currentRoutePolyline);
+    }
+
+    const latlngs = path.map(id => {
+        const node = nodesMap[id];
+        return [node.lat, node.lng];
+    });
+
+    currentRoutePolyline = L.polyline(latlngs, {
+        color: 'red',
+        weight: 5
+    }).addTo(map);
+}
+
+
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -15,8 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 function (position) {
                     // const latitude = position.coords.latitude;
                     // const longitude = position.coords.longitude;
-                    const latitude = -7.5520278;
-                    const longitude = 110.8530556;
+                    const latitude = -7.55206205800333;
+                    const longitude = 110.86513433907469;
 
                     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
@@ -67,29 +85,69 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         }
 
-                        fetch(`/cari?lat=${userLat}&lng=${userLng}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            const hasilDiv = document.getElementById('result');
+                        fetch('/cari?lat=' + userLat + '&lng=' + userLng)
+    .then(response => response.json())
+    .then(data => {
+        const hasilDiv = document.getElementById('result');
 
+        if (data.rekomendasi && data.rekomendasi.length > 0) {
+            const topWarung = data.rekomendasi[0];
 
-                            if (data.warung_terbaik) {
-                                hasilDiv.innerHTML = `
-                                    <p><strong>Warung Terbaik:</strong> ${data.warung_terbaik.name}</p>
-                                    <p>Harga: ${data.warung_terbaik.price}</p>
-                                    <p>Rating: ${data.warung_terbaik.rating}</p>
-                                    <p>Aksesibilitas: ${data.warung_terbaik.accessibility}</p>
-                                    <p>Lokasi: (${data.warung_terbaik.latitude}, ${data.warung_terbaik.longitude})</p>
-                                `;
-                            } else {
-                                hasilDiv.innerHTML = `<p><strong>Tidak ada warung yang ditemukan.</strong></p>`;
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Terjadi kesalahan saat mengambil data rekomendasi:", error);
-                            const hasilDiv = document.getElementById('result-search');
-                            hasilDiv.innerHTML = `<p><strong>Gagal mendapatkan rekomendasi. Silakan coba lagi nanti.</strong></p>`;
-                        });
+            hasilDiv.innerHTML = `
+                <p><strong>Warung Terbaik:</strong> ${topWarung.name}</p>
+                <p>Harga: ${topWarung.price}</p>
+                <p>Rating: ${topWarung.rating}</p>
+                <p>Aksesibilitas: ${topWarung.accessibility}</p>
+                <p>Lokasi: (${topWarung.latitude}, ${topWarung.longitude})</p>
+            `;
+
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+
+            fetch('/rute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token
+                },
+                body: JSON.stringify({
+                    lat: userLat,
+                    lng: userLng,
+                    goal_id: topWarung.id
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.path && data.path.length > 0) {
+                    const nodesMap = {
+                        user: { lat: userLat, lng: userLng },
+                        ...Object.fromEntries(window.appData.warung.map(w => [
+                            w.id,
+                            { lat: w.latitude, lng: w.longitude }
+                        ]))
+                    };
+
+                    console.log("Path dari A*:", data.path);
+                    console.log("Node Map:", nodesMap);
+
+                    drawRoute(data.path, nodesMap);
+                } else {
+                    console.warn("Rute tidak ditemukan:", data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Gagal mengambil rute:", error);
+            });
+
+        } else {
+            hasilDiv.innerHTML = `<p><strong>Tidak ada warung yang ditemukan.</strong></p>`;
+        }
+    })
+    .catch(error => {
+        console.error("Terjadi kesalahan saat mengambil data rekomendasi:", error);
+        const hasilDiv = document.getElementById('result-search');
+        hasilDiv.innerHTML = `<p><strong>Gagal mendapatkan rekomendasi. Silakan coba lagi nanti.</strong></p>`;
+    });
+
 
 
                         
@@ -107,3 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+
+
+
+
+

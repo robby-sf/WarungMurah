@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\DataWarung; // opsional, dulu
 use App\Models\Warung; 
 use App\Services\Astar\SkorWarung;
+use App\Services\Astar\Astar;
+use App\Services\Astar\Graph;
 
 use Illuminate\Support\Facades\Log;
 
@@ -33,33 +35,39 @@ class WarungController extends Controller
 
     public function cari(Request $request)
     {
+        Log::info("ini Cari bisa");
         try {
             $userLat = $request->input('lat');
             $userLng = $request->input('lng');
             $warungs = DataWarung::all();
 
-            $best = SkorWarung::cari($userLat, $userLng, $warungs);
+            $best = SkorWarung::cari($userLat, $userLng, $warungs,3);
 
-            if (!$best) {
+            if (empty($best)) {
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Tidak ada warung yang cocok.',
                     'warung_terbaik' => null
                 ]);
             }
+            Log::info('BEST WARUNG', ['id' => $best->id ?? 'NULL']);
 
             return response()->json([
                 'status' => 'success',
                 'user_lat' => $userLat,
                 'user_lng' => $userLng,
-                'warung_terbaik' => [
-                    'name' => $best->name,
-                    'price' => $best->price,
-                    'rating' => $best->rating,
-                    'accessibility' => $best->accessibility,
-                    'latitude' => $best->latitude,
-                    'longitude' => $best->longitude,
-                ]
+                'rekomendasi' => array_map(function($item){
+                    return [
+                    'id' => $item['warung']->id,
+                    'name' => $item['warung']->name,
+                    'price' => $item['warung']->price,
+                    'rating' => $item['warung']->rating,
+                    'accessibility' => $item['warung']->accessibility,
+                    'latitude' => $item['warung']->latitude,
+                    'longitude' => $item['warung']->longitude,
+                    'score' => $item['score']
+                ];
+                }, $best)
             ]);
 
         } catch (\Throwable $e) {
@@ -72,5 +80,69 @@ class WarungController extends Controller
     }
 
 
-    
+public function rute(Request $request)
+{
+    Log::info("ini Rute bisa");
+    try {
+        $userLat = $request->input('lat');
+        $userLng = $request->input('lng');
+        $goalId = $request->input('goal_id'); // ID warung yang dipilih
+        
+        if (!$userLat || !$userLng || !$goalId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data lokasi atau tujuan tidak lengkap.'
+            ], 400);
+        }
+        Log::info("ini Rute bisa di try");
+        
+        Log::info('RUTE STARTED', [
+            'user_lat' => $userLat,
+            'user_lng' => $userLng,
+            'goal' => $goalId
+        ]);
+
+        $warungs = DataWarung::all();
+        $userNode = ['id' => 'user', 'lat' => $userLat, 'lng' => $userLng];
+
+        $graph = Graph::buildFullyConnectedGraph($userNode, $warungs);
+        Log::info('NODES', array_keys($graph['nodes']));
+        Log::info('EDGES COUNT', [count($graph['edges'])]);
+        Log::info("GOAL ID dump:", ['goal_id' => $goalId]);
+
+
+
+        if (!isset($graph['nodes']['user']) || !isset($graph['nodes'][$goalId])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Node tidak ditemukan dalam graph.'
+            ], 500);
+        }
+
+        $path = Astar::findPath($graph['nodes'], $graph['edges'], 'user', $goalId);
+
+        if (!$path) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Rute tidak ditemukan.'
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'path' => $path
+        ]);
+    } catch (\Throwable $e) {
+        Log::error("ERROR di rute(): " . $e->getMessage(), [
+            'line' => $e->getLine(),
+            'file' => $e->getFile(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan saat memproses rute'
+        ], 500);
+    }
+}
+
 }

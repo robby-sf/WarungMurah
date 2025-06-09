@@ -4,7 +4,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Rekomendasi Tempat Makan</title>
-    @vite(['resources/css/app.css','resources/js/LokasiUser.js', 'resources/js/Map.js'])
+    @vite(['resources/css/app.css','resources/js/LokasiUser.js', 'resources/js/Map.js','resources/js/Rute.js'])
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

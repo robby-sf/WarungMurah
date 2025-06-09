@@ -18,7 +18,7 @@ class SkorWarung {
         
         $score = ($hargaScore*0.3) + ($jarakScore*0.3) + ($aksesScore*0.2) + ($ratingScore*0.2);
         // Log::info("ini Scoring");
-        // Log::info("Scoring Warung: {$warung->name}, Score: {$score}, User: {$userlatitude},{$userlongitude}");
+        Log::info("Scoring Warung: {$warung->name}, Score: {$score}");
 
         return $score;
     }
@@ -36,35 +36,54 @@ class SkorWarung {
         return $earthRadius*$c;
     }
 
-    public static function cari($userlatitude,$userlongitude,$warungs){
-        $bestScore = -INF;
-        $bestWarung = null;
-        $maxJarak = 17; 
+    public static function cari($userlatitude,$userlongitude,$warungs,$jumlah =3){
+        $scored =[];
+        $maxJarak = 50; 
 
         
 
         foreach($warungs as $warung){
             $jarak = self::Haversine($userlatitude, $userlongitude, $warung->latitude, $warung->longitude);
+            
+            // Log::info("Jarak ke {$warung->name}: {$jarak} km");
 
             if($jarak>$maxJarak){
                 continue;
             }
 
             $score = self::TotalScore($warung, $jarak);
-            if($score > $bestScore){
-                $bestScore = $score;
-                $bestWarung = $warung;
-            }
+            $warung->score = $score; 
+            $scored[] = [
+                'warung' => $warung,
+                'score' => $score
+            ];
+            
         }
 
-        Log::info("Mengembalikan warung terbaik:", ['name' => optional($bestWarung)->name,
-        'skor'=> optional($bestWarung)->score]);
-        if (!$bestWarung) {
-            Log::info("Tidak ada warung dalam radius {$maxJarak} km");
-            return null;
+        if (empty($scored)){
+            return [];
         }
 
-        return $bestWarung;
+        usort($scored, function($a, $b){
+            return $b['score'] <=> $a['score'];
+        });
+
+        $bestWarung = $scored[0] ?? null;
+        // Log::info("Scored warung versi bawah", [
+        //     'name' => $warung->name,
+        //     'jarak' => $jarak,
+        //     'score' => $score
+        // ]);
+       if (!empty($scored)) {
+        $bestWarung = $scored[0];
+        Log::info("Mengembalikan warung terbaik:", [
+            'name' => $bestWarung['warung']->name,
+            'skor' => $bestWarung['score']
+        ]);
+        
+}
+
+        return array_slice($scored,0,$jumlah);
 
     }
 
