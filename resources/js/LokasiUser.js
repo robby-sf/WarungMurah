@@ -70,6 +70,45 @@ function drawAStar(graph,map, astarPath =null){
 
 
 }
+
+function tampilkanRute(lat, lng) {
+    if (!window.userLocation) {
+        alert("Lokasi pengguna belum tersedia.");
+        return;
+    }
+
+    if (window.routingControl) {
+        map.removeControl(window.routingControl);
+    }
+
+    // Buat routing dengan Leaflet Routing Machine + fallback
+    window.routingControl = L.Routing.control({
+        waypoints: [
+            L.latLng(window.userLocation.lat, window.userLocation.lng),
+            L.latLng(lat, lng)
+        ],
+        router: L.Routing.osrmv1({
+            serviceUrl: 'https://router.project-osrm.org/route/v1'
+        }),
+        routeWhileDragging: false,
+        createMarker: () => null // opsional: hilangkan marker default
+    }).addTo(map)
+    .on('routingerror', function(e) {
+        console.warn("Gagal routing dari OSRM, fallback ke garis lurus polyline:", e);
+
+        // Buat garis lurus dari lokasi user ke warung
+        L.polyline([
+            [window.userLocation.lat, window.userLocation.lng],
+            [lat, lng]
+        ], {
+            color: 'orange',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '5, 10'
+        }).addTo(map);
+    });
+}
+
   
 
 document.addEventListener("DOMContentLoaded", () =>{
@@ -177,157 +216,119 @@ document.addEventListener("DOMContentLoaded", () =>{
 });
 
 
-// document.addEventListener("DOMContentLoaded", () => {
-
-//     const getLocationBtn = document.getElementById("UserLocation");
-//     const result = document.getElementById("result");
-
-//     if (!getLocationBtn) {
-//         console.error("Tombol get location tidak ditemukan.");
-//         return;
-//     }
-
-//     getLocationBtn.addEventListener("click", () => {
-//         if (navigator.geolocation) {
-//             navigator.geolocation.getCurrentPosition(
-//                 function (position) {
-//                     // const latitude = position.coords.latitude;
-//                     // const longitude = position.coords.longitude;
-//                     const latitude = -7.55206205800333;
-//                     const longitude = 110.86513433907469;
-
-//                     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 
-//                     fetch('/lokasi', {
-//                         method: 'POST',
-//                         headers: {
-//                         'Content-Type': 'application/json',
-//                         'Accept': 'application/json',
-//                         'X-CSRF-TOKEN': token
-//                         },
-//                         body: JSON.stringify({ latitude, longitude })
-//                     })
-//                         .then(response => response.json())
-//                         .then(data => {
-//                         // console.log("Respon dari server:", data);
+    
+let routingControl = null;
+document.addEventListener("DOMContentLoaded", () => {
+    const cariBtn = document.getElementById("cariRekomendasi");
 
-//                         result.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    if (!cariBtn) {
+        console.error("Tombol Cari Rekomendasi tidak ditemukan.");
+        return;
+    }
 
-//                         const userLat = parseFloat(data.user_lat);
-//                         const userLng = parseFloat(data.user_lng);
-                        
+    cariBtn.addEventListener("click", () => {
+        if (!navigator.geolocation) {
+            alert("Browser tidak mendukung geolocation.");
+            return;
+        }
 
-//                         window.appData.userLat = userLat;
-//                         window.appData.userLng = userLng;
-//                         window.appData.warung = data.warung;
+        navigator.geolocation.getCurrentPosition(successGetLocation, () => {
+            alert("Gagal mengambil lokasi.");
+        });
+    });
 
-//                         if (window.userMarker) {
-//                             window.map.removeLayer(window.userMarker);
-//                         }
+    function successGetLocation(position) {
+    // const latitude = position.coords.latitude;
+    // const longitude = position.coords.longitude;
+    const latitude = -7.558067551108021;
+    const longitude = 110.85081864147803;
+    console.log("Lokasi user:", latitude, longitude);
 
-//                         window.userMarker = L.marker([userLat, userLng])
-//                             .addTo(window.map)
-//                             .bindPopup(`Lokasi Anda (update)<br>Lat: ${userLat}<br>Lng: ${userLng}`)
-//                             .openPopup();
+    window.userLocation = {
+        lat: latitude,
+        lng: longitude
+    };
 
-//                         console.log("Pindah ke:", userLat, userLng);
+    // Pindahkan map ke lokasi user
+    map.setView([latitude, longitude], 15);
 
+    // Tambahkan marker
+    if (window.userMarker) map.removeLayer(window.userMarker);
+    window.userMarker = L.marker([latitude, longitude]).addTo(map).bindPopup("Lokasi Anda").openPopup();
 
-//                         window.map.setView([userLat, userLng], 15); 
+    // Kirim ke server dan dapatkan rekomendasi
+    const token = document.querySelector('meta[name="csrf-token"]').content;
 
-//                         if (Array.isArray(data.warung)) {
-//                             data.warung.forEach(item => {
-//                                 L.marker([item.latitude, item.longitude])
-//                                     .addTo(window.map)
-//                                     .bindPopup(`<b>${item.name}</b><br>Rating: ${item.rating}/5`);
-//                             });
-
-//                         }
-
-//                         fetch('/cari?lat=' + userLat + '&lng=' + userLng)
-//     .then(response => response.json())
-//     .then(data => {
-//         const hasilDiv = document.getElementById('result');
-
-//         if (data.rekomendasi && data.rekomendasi.length > 0) {
-//             const topWarung = data.rekomendasi[0];
-
-//             hasilDiv.innerHTML = `
-//                 <p><strong>Warung Terbaik:</strong> ${topWarung.name}</p>
-//                 <p>Harga: ${topWarung.price}</p>
-//                 <p>Rating: ${topWarung.rating}</p>
-//                 <p>Aksesibilitas: ${topWarung.accessibility}</p>
-//                 <p>Lokasi: (${topWarung.latitude}, ${topWarung.longitude})</p>
-//             `;
-
-//             const token = document.querySelector('meta[name="csrf-token"]').content;
-
-//             fetch('/rute', {
-//                 method: 'POST',
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                     'X-CSRF-TOKEN': token
-//                 },
-//                 body: JSON.stringify({
-//                     lat: userLat,
-//                     lng: userLng,
-//                     goal_id: topWarung.id
-//                 })
-//             })
-//             .then(response => response.json())
-//             .then(data => {
-//                 if (data.path && data.path.length > 0) {
-//                     const nodesMap = {
-//                         user: { lat: userLat, lng: userLng },
-//                         ...Object.fromEntries(window.appData.warung.map(w => [
-//                             w.id,
-//                             { lat: w.latitude, lng: w.longitude }
-//                         ]))
-//                     };
-
-//                     console.log("Path dari A*:", data.path);
-//                     console.log("Node Map:", nodesMap);
-
-//                     drawRoute(data.path, nodesMap);
-//                 } else {
-//                     console.warn("Rute tidak ditemukan:", data.message);
-//                 }
-//             })
-//             .catch(error => {
-//                 console.error("Gagal mengambil rute:", error);
-//             });
-
-//         } else {
-//             hasilDiv.innerHTML = `<p><strong>Tidak ada warung yang ditemukan.</strong></p>`;
-//         }
-//     })
-//     .catch(error => {
-//         console.error("Terjadi kesalahan saat mengambil data rekomendasi:", error);
-//         const hasilDiv = document.getElementById('result-search');
-//         hasilDiv.innerHTML = `<p><strong>Gagal mendapatkan rekomendasi. Silakan coba lagi nanti.</strong></p>`;
-//     });
+    fetch('/lokasi', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': token
+        },
+        body: JSON.stringify({ latitude, longitude })
+    })
+    .then(res => res.json())
+    .then(lokasiData => {
+        // Setelah lokasi dikirim, panggil pencarian rekomendasi
+        fetch(`/cari?lat=${latitude}&lng=${longitude}`)
+            .then(res => res.json())
+            .then(rekomendasiData => {
+                tampilkanRekomendasi(rekomendasiData.rekomendasi);
+            });
+    })
+    .catch(err => console.error("Gagal:", err));
+}
 
 
+    function tampilkanRekomendasi(data) {
+        const container = document.getElementById("cardsContainer");
+        container.innerHTML = '';
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p>Tidak ada rekomendasi ditemukan.</p>';
+            return;
+        }
 
-                        
-//                     });
+        data.forEach(warung => {
+            const card = document.createElement("div");
+            card.className = "card mb-2";
+            card.innerHTML = `
+         <button class="group flex h-full flex-col rounded-2xl bg-gray-800 border-2 border-transparent shadow-lg transition-all duration-300 hover:bg-[#21262d] hover:ring-2 hover:ring-[#8b5cf6">
+                <div class="flex flex-grow flex-col p-6">
+                    <h5 class="mb-3 text-lg font-semibold text-white">${warung.name}</h5>
+                    
+                    <div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-400">
+                        <div class="flex items-center gap-2">
+                            <svg class="h-4 w-4 text-theme-purple" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg>
+                            <span>Rating: <strong class="font-bold text-yellow-400">${warung.rating}</strong></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="h-4 w-4 text-theme-purple" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+                            <span>Akses: ${warung.accessibility}</span>
+                        </div>
+                    </div>
 
-                        
+                    <div class="mt-auto mb-4 text-lg text-white">
+                        <span>Skor Harga:</span>
+                        <strong class="text-3xl font-bold text-theme-purple">${warung.price}</strong>
+                    </div>
+                </div>
+            </button>
+            `;
+            container.appendChild(card);
 
-//                 },
-//                 function (error) {
-//                     alert("Gagal mendapatkan lokasi user");
-//                 }
-//             );
-//         } else {
-//             alert("Browser tidak mendukung geolocation");
-//         }
-//     });
-// });
+            const button = card.querySelector("button");
+            button.addEventListener("click", () => {
+                tampilkanRute(warung.latitude, warung.longitude);
+            });
 
-
-
-
+            // Tambah marker juga
+            L.marker([warung.latitude, warung.longitude])
+                .addTo(map)
+                .bindPopup(`<b>${warung.name}</b><br>Rating: ${warung.rating}/5`);
+        });
+    }
+});
 
 

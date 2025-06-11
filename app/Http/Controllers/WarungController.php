@@ -21,18 +21,25 @@ class WarungController extends Controller
     }
 
     public function lokasi(Request $request)
-    {
-        $lat = $request->latitude;
-        $lng = $request->longitude;
+        {
+            $lat = $request->latitude;
+            $lng = $request->longitude;
 
-        $warung = DataWarung::all();
-        return response()->json([
-            'status' => 'success',
-            'user_lat' => $lat,
-            'user_lng' => $lng,
-            'warung' => $warung
-        ]);
-    }
+            // Kalkulasi jarak dari lokasi user menggunakan Haversine Formula (misalnya dalam 5km)
+            $warung = DataWarung::select('*')
+                ->selectRaw('(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance',
+                    [$lat, $lng, $lat])
+                ->orderBy('distance')
+                ->limit(10)
+                ->get();
+
+            return response()->json([
+                'user_lat' => $lat,
+                'user_lng' => $lng,
+                'warung' => $warung
+            ]);
+        }
+
 
     public function cari(Request $request)
     {
@@ -42,7 +49,7 @@ class WarungController extends Controller
             $userLng = $request->input('lng');
             $warungs = DataWarung::all();
 
-            $best = SkorWarung::cari($userLat, $userLng, $warungs,3);
+            $best = SkorWarung::cari($userLat, $userLng, $warungs,12);
 
             if (empty($best)) {
                 return response()->json([
@@ -170,7 +177,7 @@ class WarungController extends Controller
             ]);
         }
 
-    public function getAstarRouteDemo()
+    public function getAstarRoute()
 {
     Log::info("Masuk ke getAstarRouteDemo");
 

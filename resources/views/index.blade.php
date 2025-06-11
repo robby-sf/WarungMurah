@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
 
 </head>
 
@@ -43,15 +43,15 @@
             </div>
     </section>
 
-    <section class="py-16 text-center bg-[#161b22]">
+    <section class="py-16 text-center bg-[#0d1117]">
         <h2 class="text-3xl font-semibold mb-6">Rekomendasi Untukmu</h2>
-        <button id="UserLocation" class="px-6 py-3 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-medium rounded-lg transition">
+        <button id="cariRekomendasi" class="px-6 py-3 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-medium rounded-lg transition">
             Cari Rekomendasi
         </button>
-        <div id="result" class="mt-8">
-        </div>
-        <div id="result-search" class="mt-8">
-        </div>
+        
+        <div id="result" class="mt-8"></div>
+        <div id="result-search" class="mt-8"></div>
+        <div id="cardsContainer" class="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4"></div>
     </section>
 
     <section class="py-16 px-4 bg-[#0d1117]">
