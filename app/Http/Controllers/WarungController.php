@@ -8,6 +8,7 @@ use App\Models\Warung;
 use App\Services\Astar\SkorWarung;
 use App\Services\Astar\Astar;
 use App\Services\Astar\Graph;
+use App\Services\Astar\Graph2;
 
 use Illuminate\Support\Facades\Log;
 
@@ -157,6 +158,17 @@ class WarungController extends Controller
                 'graph' => $graphData
             ]);
         }
+    public function liaDemo()
+        {
+            // Panggil metode statis buildgraph dari class sherinGraph
+            $graphData = Graph2::buildgraph();
+
+            // Kembalikan data dalam format JSON, sesuai yang diharapkan oleh JavaScript
+            return response()->json([
+                'status' => 'success',
+                'graph' => $graphData
+            ]);
+        }
 
     public function getAstarRouteDemo()
 {
@@ -164,6 +176,76 @@ class WarungController extends Controller
 
     try {
         $graph = Graph::buildgraph();
+
+        
+        $adjacencyList = [];
+        Log::info("Contoh edge pertama: " . json_encode($graph['edges'][0] ?? 'Kosong'));
+
+                foreach ($graph['edges'] as $idx => $edge) {
+            if (!is_array($edge)) {
+                Log::warning("Edge bukan array di index $idx:", ['value' => $edge]);
+                continue;
+            }
+
+            if (!isset($edge['from'], $edge['to'], $edge['cost'])) {
+                Log::warning("Edge tidak lengkap di index $idx:", $edge);
+                continue;
+            }
+
+            $adjacencyList[$edge['from']][] = ['to' => $edge['to'], 'cost' => $edge['cost']];
+            $adjacencyList[$edge['to']][] = ['to' => $edge['from'], 'cost' => $edge['cost']];
+        }
+        
+        Log::info("Adjacency List berhasil dibuat:", $adjacencyList);
+
+        Log::info("Total edges: " . count($graph['edges']));
+        Log::info("Contoh edge pertama:", [$graph['edges'][0] ?? 'Kosong']);
+
+
+
+        $startNode = 'user';
+        $endNode = 'warung';
+
+        Log::info("Menjalankan A* dari $startNode ke $endNode");
+        Log::info("Nodes tersedia:", array_keys($graph['nodes']));
+        Log::info("Jumlah edge:", [count($graph['edges'])]);
+        
+        $path = Astar::findPath(
+            ['nodes' => $graph['nodes'], 'edges' => $adjacencyList],
+            $startNode,
+            $endNode
+        );
+        Log::info("Hasil Path:", $path);
+
+
+        
+        if (!$path) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Rute tidak ditemukan dari $startNode ke $endNode."
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'path' => $path
+        ]);
+
+    } catch (\Throwable $e) {
+        Log::error("ERROR di getAstarRouteDemo(): " . $e->getMessage() . " di baris " . $e->getLine());
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Kesalahan Server saat mencari rute A*.'
+        ], 500);
+    }
+}
+
+public function getAstarRoute2()
+{
+    Log::info("Masuk ke getAstarRouteDemo");
+
+    try {
+        $graph = Graph2::buildgraph();
 
         
         $adjacencyList = [];

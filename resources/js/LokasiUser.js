@@ -37,7 +37,7 @@ function drawAStar(graph,map, astarPath =null){
             color: '#c026d3', // Warna ungu tua untuk garis
             fillColor: '#f0abfc', // Warna ungu muda untuk isian
             fillOpacity: 0.9,
-            radius: 9 // Radius dalam meter
+            radius: 3 // Radius dalam meter
         }).addTo(map);
 
         circle.bindPopup(`<b>Node: ${nodeId}</b>`);
@@ -122,7 +122,59 @@ document.addEventListener("DOMContentLoaded", () =>{
 
 
                     })
+});
+
+document.addEventListener("DOMContentLoaded", () =>{
+    const SherindemoBtn = document.getElementById("lia");
+
+    if (!SherindemoBtn) {
+        console.error("Tombol tidak ditemukan.");
+        return;
+    }
+
+    SherindemoBtn.addEventListener("click", () => {
+        const latitude = -7.558067551108021;
+        const longitude = 110.85081864147803;
+
+        window.map.flyTo([latitude,longitude],18);
+        window.userMarker.setLatLng([latitude,longitude]);
+        window.userMarker.setPopupContent("<b>Lokasi Anda</b>").openPopup();
+
+        // Panggil kedua endpoint secara bersamaan
+            Promise.all([
+                    fetch('/lia').then(res => res.json()), // graph
+                    fetch('/get-astar-route2')
+                    .then(res => {
+        console.log("Respons mentah dari /get-astar-route:", res);
+
+        if (!res.ok) {
+            throw new Error(`Server error ${res.status} saat mengambil A*`);
+        }
+
+        return res.json(); // hanya akan dieksekusi kalau status OK
+    })
+                ])
+                .then(([graphResponse, astarResponse]) => {
+                    console.log("=== Hasil dari /sherin ===");
+                    console.log("Graph:", graphResponse.graph);
+
+                    console.log("=== Hasil dari /get-astar-route ===");
+                    console.log("Path A*:", astarResponse.path);
+                    if (astarResponse.status !== 'success' || !astarResponse.path) {
+                        console.warn("A* tidak berhasil:", astarResponse.message || "Path kosong");
+                        return;
+                    }
+                    drawAStar(graphResponse.graph, window.map, astarResponse.path);
+                })
+                .catch(error => {
+                    console.error("Error parsing JSON atau server error:", error);
                 });
+
+
+
+
+                    })
+});
 
 
 // document.addEventListener("DOMContentLoaded", () => {
