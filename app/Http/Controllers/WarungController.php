@@ -80,67 +80,150 @@ class WarungController extends Controller
     }
 
 
-public function rute(Request $request)
+// public function rute(Request $request)
+// {
+//     Log::info("ini Rute bisa");
+//     try {
+//         $userLat = $request->input('lat');
+//         $userLng = $request->input('lng');
+//         $goalId = $request->input('goal_id'); // ID warung yang dipilih
+        
+//         if (!$userLat || !$userLng || !$goalId) {
+//             return response()->json([
+//                 'status' => 'error',
+//                 'message' => 'Data lokasi atau tujuan tidak lengkap.'
+//             ], 400);
+//         }
+//         Log::info("ini Rute bisa di try");
+        
+//         Log::info('RUTE STARTED', [
+//             'user_lat' => $userLat,
+//             'user_lng' => $userLng,
+//             'goal' => $goalId
+//         ]);
+
+//         $warungs = DataWarung::all();
+//         $userNode = ['id' => 'user', 'lat' => $userLat, 'lng' => $userLng];
+
+//         $graph = Graph::buildFullyConnectedGraph($userNode, $warungs);
+//         Log::info('NODES', array_keys($graph['nodes']));
+//         Log::info('EDGES COUNT', [count($graph['edges'])]);
+//         Log::info("GOAL ID dump:", ['goal_id' => $goalId]);
+
+
+
+//         if (!isset($graph['nodes']['user']) || !isset($graph['nodes'][$goalId])) {
+//             return response()->json([
+//                 'status' => 'error',
+//                 'message' => 'Node tidak ditemukan dalam graph.'
+//             ], 500);
+//         }
+
+//         $path = Astar::findPath($graph['nodes'], $graph['edges'], 'user', $goalId);
+
+//         if (!$path) {
+//             return response()->json([
+//                 'status' => 'error',
+//                 'message' => 'Rute tidak ditemukan.'
+//             ], 500);
+//         }
+
+//         return response()->json([
+//             'status' => 'success',
+//             'path' => $path
+//         ]);
+//     } catch (\Throwable $e) {
+//         Log::error("ERROR di rute(): " . $e->getMessage(), [
+//             'line' => $e->getLine(),
+//             'file' => $e->getFile(),
+//             'trace' => $e->getTraceAsString()
+//         ]);
+//         return response()->json([
+//             'status' => 'error',
+//             'message' => 'Terjadi kesalahan saat memproses rute'
+//         ], 500);
+//     }
+// }
+
+
+    public function sherinDemo()
+        {
+            // Panggil metode statis buildgraph dari class sherinGraph
+            $graphData = Graph::buildgraph();
+
+            // Kembalikan data dalam format JSON, sesuai yang diharapkan oleh JavaScript
+            return response()->json([
+                'status' => 'success',
+                'graph' => $graphData
+            ]);
+        }
+
+    public function getAstarRouteDemo()
 {
-    Log::info("ini Rute bisa");
+    Log::info("Masuk ke getAstarRouteDemo");
+
     try {
-        $userLat = $request->input('lat');
-        $userLng = $request->input('lng');
-        $goalId = $request->input('goal_id'); // ID warung yang dipilih
+        $graph = Graph::buildgraph();
+
         
-        if (!$userLat || !$userLng || !$goalId) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data lokasi atau tujuan tidak lengkap.'
-            ], 400);
+        $adjacencyList = [];
+        Log::info("Contoh edge pertama: " . json_encode($graph['edges'][0] ?? 'Kosong'));
+
+                foreach ($graph['edges'] as $idx => $edge) {
+            if (!is_array($edge)) {
+                Log::warning("Edge bukan array di index $idx:", ['value' => $edge]);
+                continue;
+            }
+
+            if (!isset($edge['from'], $edge['to'], $edge['cost'])) {
+                Log::warning("Edge tidak lengkap di index $idx:", $edge);
+                continue;
+            }
+
+            $adjacencyList[$edge['from']][] = ['to' => $edge['to'], 'cost' => $edge['cost']];
+            $adjacencyList[$edge['to']][] = ['to' => $edge['from'], 'cost' => $edge['cost']];
         }
-        Log::info("ini Rute bisa di try");
         
-        Log::info('RUTE STARTED', [
-            'user_lat' => $userLat,
-            'user_lng' => $userLng,
-            'goal' => $goalId
-        ]);
+        Log::info("Adjacency List berhasil dibuat:", $adjacencyList);
 
-        $warungs = DataWarung::all();
-        $userNode = ['id' => 'user', 'lat' => $userLat, 'lng' => $userLng];
-
-        $graph = Graph::buildFullyConnectedGraph($userNode, $warungs);
-        Log::info('NODES', array_keys($graph['nodes']));
-        Log::info('EDGES COUNT', [count($graph['edges'])]);
-        Log::info("GOAL ID dump:", ['goal_id' => $goalId]);
+        Log::info("Total edges: " . count($graph['edges']));
+        Log::info("Contoh edge pertama:", [$graph['edges'][0] ?? 'Kosong']);
 
 
 
-        if (!isset($graph['nodes']['user']) || !isset($graph['nodes'][$goalId])) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Node tidak ditemukan dalam graph.'
-            ], 500);
-        }
+        $startNode = 'user';
+        $endNode = 'warung';
 
-        $path = Astar::findPath($graph['nodes'], $graph['edges'], 'user', $goalId);
+        Log::info("Menjalankan A* dari $startNode ke $endNode");
+        Log::info("Nodes tersedia:", array_keys($graph['nodes']));
+        Log::info("Jumlah edge:", [count($graph['edges'])]);
+        
+        $path = Astar::findPath(
+            ['nodes' => $graph['nodes'], 'edges' => $adjacencyList],
+            $startNode,
+            $endNode
+        );
+        Log::info("Hasil Path:", $path);
 
+
+        
         if (!$path) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Rute tidak ditemukan.'
-            ], 500);
+                'message' => "Rute tidak ditemukan dari $startNode ke $endNode."
+            ], 404);
         }
 
         return response()->json([
             'status' => 'success',
             'path' => $path
         ]);
+
     } catch (\Throwable $e) {
-        Log::error("ERROR di rute(): " . $e->getMessage(), [
-            'line' => $e->getLine(),
-            'file' => $e->getFile(),
-            'trace' => $e->getTraceAsString()
-        ]);
+        Log::error("ERROR di getAstarRouteDemo(): " . $e->getMessage() . " di baris " . $e->getLine());
         return response()->json([
             'status' => 'error',
-            'message' => 'Terjadi kesalahan saat memproses rute'
+            'message' => 'Kesalahan Server saat mencari rute A*.'
         ], 500);
     }
 }

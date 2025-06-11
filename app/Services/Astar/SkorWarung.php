@@ -4,6 +4,7 @@ namespace App\Services\Astar;
 use Illuminate\Support\Facades\Log;
 
 
+
 class SkorWarung {
 
     public static function TotalScore($warung, $jarak){

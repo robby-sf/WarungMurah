@@ -1,38 +1,100 @@
 <?php
 namespace App\Services\Astar;
+use App\Services\Astar\SkorWarung;
 
-class Graph
-{
-    public static function buildFullyConnectedGraph($userNode, $warungs)
+class Graph{
+    
+    public static function Haversine($lat1, $lon1, $lat2, $lon2)
     {
-        $nodes = [];
-        $edges = [];
+        $earthRadius = 6371;
 
-        // Tambahkan node user
-        $nodes[$userNode['id']] = $userNode;
+        $dlat = deg2rad($lat2 - $lat1);
+        $dlon = deg2rad($lon2 - $lon1);
 
-        // Tambahkan semua warung sebagai node
-        foreach ($warungs as $warung) {
-            $nodes[$warung->id] = [
-                'id' => $warung->id,
-                'lat' => $warung->latitude,
-                'lng' => $warung->longitude
-            ];
-        }
+        $a = sin($dlat / 2) * sin($dlat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dlon / 2) * sin($dlon / 2);
 
-        $allNodes = array_values($nodes);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        return $earthRadius * $c;
+    }
+    
 
-        foreach ($allNodes as $w1) {
-            foreach ($allNodes as $w2) {
-                if ($w1['id'] !== $w2['id']) {
-                    $jarak = SkorWarung::Haversine($w1['lat'], $w1['lng'], $w2['lat'], $w2['lng']);
-                    $edges[] = [
-                        'from' => $w1['id'],
-                        'to' => $w2['id'],
-                        'cost' => $jarak
-                    ];
-                }
-            }
+    public static function buildgraph(){
+        $nodes = [
+            'user' => ['lat'=> -7.55206205800333, 'lng'=>110.86513433907469],
+            'A'=>['lat' =>-7.5521695427081115,'lng'=> 110.8651959555816],
+            'B'=>['lat' =>-7.552350350754553 ,'lng'=> 110.86512621814585],
+            'C'=>['lat' =>-7.552222215365073 ,'lng'=> 110.86471499679485],
+            'D'=>['lat' =>-7.552436963618671 ,'lng'=> 110.86462948595769],
+            'E'=>['lat' =>-7.551922697884361 ,'lng'=> 110.86529647048035],
+            'F'=>['lat' =>-7.55203289773579  ,'lng'=> 110.86570692249883],
+            'G'=>['lat' =>-7.552575419671549 ,'lng'=> 110.86505418977501],
+            'H'=>['lat' =>-7.552728003843267 ,'lng'=> 110.86547319287719],
+            'I'=>['lat' =>-7.552177702862074 ,'lng'=> 110.86384398376659],
+            'J'=>['lat' =>-7.552501643847704 ,'lng'=> 110.86371411136972],
+            'K'=>['lat' =>-7.552744014713118 ,'lng'=> 110.8645338332646],
+            'L'=>['lat' =>-7.553008843892578 ,'lng'=> 110.8653623569393],
+            'M'=>['lat' =>-7.553320949105034 ,'lng'=> 110.86527511296117],
+            'N'=>['lat' =>-7.553057727856404 ,'lng'=> 110.864429225695],
+            'O'=>['lat' =>-7.552794342470226 ,'lng'=> 110.86359738234029],
+            'P'=>['lat' =>-7.553097461361041 ,'lng'=> 110.86349545839572],
+            'Q'=>['lat' =>-7.553384626429873 ,'lng'=> 110.86432157878849],
+            'R'=>['lat' =>-7.55364956581381 ,'lng'=> 110.86515237289589],
+            'S'=>['lat' =>-7.553989280301761 ,'lng'=> 110.86508891207852],
+            'warung'=>['lat' =>-7.5537222,'lng'=> 110.8648333],
+            'U'=>['lat' =>-7.553707375135067 ,'lng'=> 110.86420231890048],
+            'V'=>['lat' =>-7.553420953757461 ,'lng'=> 110.86338202635356],
+            'W'=>['lat' =>-7.553536082487393 ,'lng'=> 110.86367933578673 ],
+
+        ];
+
+        $edges =[];
+
+        $connection = [
+            ['user','A'],
+            ['A','B'],
+            ['A','E'],
+            ['B','C'],
+            ['B','G'],
+            ['C','D'],
+            ['D','G'],
+            ['D','I'],
+            ['D','K'],
+            ['E','F'],
+            ['F','H'],
+            ['G','H'],
+            ['H','L'],
+            ['I','J'],
+            ['J','K'],
+            ['J','O'],
+            ['K','N'],
+            ['L','M'],
+            ['M','N'],
+            ['M','R'],
+            ['N','Q'],
+            ['N','O'],
+            ['O','P'],
+            ['P','V'],
+            ['P','Q'],
+            ['Q','U'],
+            ['Q','R'],
+            ['R','S'],
+            ['S','warung'],
+            ['U','warung'],
+            ['V','W'],
+            ['W','U'],
+        ];
+
+        foreach ($connection as [$from, $to]) {
+            $lat1 = $nodes[$from]['lat'];
+            $lng1 = $nodes[$from]['lng'];
+            $lat2 = $nodes[$to]['lat'];
+            $lng2 = $nodes[$to]['lng'];
+
+            $cost = self::Haversine($lat1, $lng1, $lat2, $lng2);
+            $edges[] = ['from' => $from, 'to' => $to, 'cost' => $cost];
+            
         }
 
         return [
@@ -40,7 +102,7 @@ class Graph
             'edges' => $edges
         ];
     }
-}
 
+}
 
 ?>

@@ -9,4 +9,5 @@ Route::post('/lokasi', [WarungController::class, 'lokasi']);
 Route::get('/cari', [WarungController::class, 'cari']);
 Route::get('/rute', [WarungController::class, 'rute']);
 Route::post('/rute', [WarungController::class, 'rute']);
-
+Route::get('/sherin', [WarungController::class, 'sherinDemo']);
+Route::get('/get-astar-route', [WarungController::class, 'getAstarRouteDemo']);
