@@ -109,6 +109,19 @@ function tampilkanRute(lat, lng) {
     });
 }
 
+function getRentangHarga(skor) {
+    switch (skor) {
+        case 1:
+            return "Rp 10.000 – 20.000";
+        case 2:
+            return "Rp 20.001 – 30.000";
+        case 3:
+            return "Rp 30.001 – 50.000";
+        default:
+            return "Tidak diketahui";
+    }
+}
+
   
 
 document.addEventListener("DOMContentLoaded", () =>{
@@ -218,8 +231,8 @@ document.addEventListener("DOMContentLoaded", () =>{
 
 
 
-    
 let routingControl = null;
+
 document.addEventListener("DOMContentLoaded", () => {
     const cariBtn = document.getElementById("cariRekomendasi");
 
@@ -229,57 +242,49 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     cariBtn.addEventListener("click", () => {
-        if (!navigator.geolocation) {
-            alert("Browser tidak mendukung geolocation.");
-            return;
-        }
+        const latitude = -7.558067551108021;
+        const longitude = 110.85081864147803;
+        console.log("Menggunakan lokasi default:", latitude, longitude);
 
-        navigator.geolocation.getCurrentPosition(successGetLocation, () => {
-            alert("Gagal mengambil lokasi.");
-        });
-    });
+        window.userLocation = {
+            lat: latitude,
+            lng: longitude
+        };
 
-    function successGetLocation(position) {
-    // const latitude = position.coords.latitude;
-    // const longitude = position.coords.longitude;
-    const latitude = -7.558067551108021;
-    const longitude = 110.85081864147803;
-    console.log("Lokasi user:", latitude, longitude);
+        // Pindahkan map ke lokasi default
+        map.setView([latitude, longitude], 15);
 
-    window.userLocation = {
-        lat: latitude,
-        lng: longitude
-    };
+        // Tambahkan marker lokasi default
+        if (window.userMarker) map.removeLayer(window.userMarker);
+        window.userMarker = L.marker([latitude, longitude])
+            .addTo(map)
+            .bindPopup("Lokasi Default")
+            .openPopup();
 
-    // Pindahkan map ke lokasi user
-    map.setView([latitude, longitude], 15);
+        // Kirim lokasi ke server
+        const token = document.querySelector('meta[name="csrf-token"]').content;
 
-    // Tambahkan marker
-    if (window.userMarker) map.removeLayer(window.userMarker);
-    window.userMarker = L.marker([latitude, longitude]).addTo(map).bindPopup("Lokasi Anda").openPopup();
+        fetch('/lokasi', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token
+            },
+            body: JSON.stringify({ latitude, longitude })
+        })
+        .then(res => res.json())
+        .then(lokasiData => {
+            // Panggil endpoint rekomendasi
+            fetch(`/cari?lat=${latitude}&lng=${longitude}`)
+                .then(res => res.json())
+                .then(rekomendasiData => {
+                    tampilkanRekomendasi(rekomendasiData.rekomendasi);
+                });
+        })
+        .catch(err => console.error("Gagal:", err));
+    
+});
 
-    // Kirim ke server dan dapatkan rekomendasi
-    const token = document.querySelector('meta[name="csrf-token"]').content;
-
-    fetch('/lokasi', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': token
-        },
-        body: JSON.stringify({ latitude, longitude })
-    })
-    .then(res => res.json())
-    .then(lokasiData => {
-        // Setelah lokasi dikirim, panggil pencarian rekomendasi
-        fetch(`/cari?lat=${latitude}&lng=${longitude}`)
-            .then(res => res.json())
-            .then(rekomendasiData => {
-                tampilkanRekomendasi(rekomendasiData.rekomendasi);
-            });
-    })
-    .catch(err => console.error("Gagal:", err));
-}
 
 
     function tampilkanRekomendasi(data) {
@@ -294,27 +299,28 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement("div");
             card.className = "card mb-2";
             card.innerHTML = `
-         <button class="group flex h-full flex-col rounded-2xl bg-gray-800 border-2 border-transparent shadow-lg transition-all duration-300 hover:bg-[#21262d] hover:ring-2 hover:ring-[#8b5cf6">
-                <div class="flex flex-grow flex-col p-6">
-                    <h5 class="mb-3 text-lg font-semibold text-white">${warung.name}</h5>
-                    
-                    <div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-400">
-                        <div class="flex items-center gap-2">
-                            <svg class="h-4 w-4 text-theme-purple" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/></svg>
-                            <span>Rating: <strong class="font-bold text-yellow-400">${warung.rating}</strong></span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <svg class="h-4 w-4 text-theme-purple" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
-                            <span>Akses: ${warung.accessibility}</span>
-                        </div>
-                    </div>
+                <button class="group flex flex-col h-full min-h-[260px] w-full rounded-2xl bg-gray-800 border-2 border-transparent shadow-lg transition-all duration-300 hover:bg-[#21262d] hover:ring-2 hover:ring-[#8b5cf6]">
+                    <div class="flex flex-col flex-grow p-6">
+                        <h5 class="mb-3 text-lg font-semibold text-white line-clamp-2">${warung.name}</h5>
 
-                    <div class="mt-auto mb-4 text-lg text-white">
-                        <span>Skor Harga:</span>
-                        <strong class="text-3xl font-bold text-theme-purple">${warung.price}</strong>
+                        <div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-400">
+                            <div class="flex items-center gap-2">
+                                <svg class="h-4 w-4 text-theme-purple" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="..." /></svg>
+                                <span>Rating: <strong class="font-bold text-yellow-400">${warung.rating}</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="h-4 w-4 text-theme-purple" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="..." /></svg>
+                                <span>Akses: ${warung.accessibility}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto text-lg text-white">
+                            <span>Harga:</span>
+                            <strong class="text-lg font-bold text-theme-purple">${getRentangHarga(warung.price)}</strong>
+                        </div>
                     </div>
-                </div>
-            </button>
+                </button>
+
             `;
             container.appendChild(card);
 
