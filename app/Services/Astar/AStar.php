@@ -40,37 +40,44 @@ class Astar
 
         $openSetHash = [$start => true];
         while (!$openSet->isEmpty()) {
-                    // Ambil node dari antrian dengan f_score terkecil
                     $current = $openSet->extract();
                     unset($openSetHash[$current]);
+                    Log::info("📍 Current node dievaluasi: $current");
 
-                    // Jika sudah sampai tujuan, rekonstruksi rute dan kembalikan hasilnya.
                     if ($current === $finish) {
+                        Log::info("✅ Tujuan ($finish) ditemukan! Memulai rekonstruksi path...");
                         return self::reconstructPath($cameFrom, $current);
                     }
 
-                    // Iterasi semua tetangga dari node saat ini
-                    if (!isset($adjacencyList[$current])) continue;
+                    if (!isset($adjacencyList[$current])) {
+                        Log::warning("⚠️ Node $current tidak memiliki tetangga!");
+                        continue;}
 
                     foreach ($adjacencyList[$current] as $edge) {
                         $neighbor = $edge['to'];
-                        
-                        // tentative_g_score adalah jarak dari start ke tetangga melalui node saat ini.
-                        $tentative_g_score = $g_score[$current] + $edge['cost'];
+                        $cost = $edge['cost'];
 
-                        // Jika rute melalui 'current' lebih baik daripada rute sebelumnya ke 'neighbor'
+                        $tentative_g_score = $g_score[$current] + $cost;
+                        Log::info("🔄 Mengecek neighbor $neighbor dari $current");
+                        Log::info("Cost dari $current ke $neighbor: $cost");
+                        Log::info("g_score[$current]: {$g_score[$current]} → tentative_g_score[$neighbor]: $tentative_g_score");
+
+
                         if ($tentative_g_score < $g_score[$neighbor]) {
-                            // Catat rute baru yang lebih baik ini
                             $cameFrom[$neighbor] = $current;
                             $g_score[$neighbor] = $tentative_g_score;
                             
-                            // Hitung f_score baru untuk neighbor
-                            $f_score[$neighbor] = $g_score[$neighbor] + self::Haversine(
+                            $heuristic = self::Haversine(
                                 $nodes[$neighbor]['lat'], $nodes[$neighbor]['lng'],
                                 $nodes[$finish]['lat'], $nodes[$finish]['lng']
                             );
 
-                            // Jika neighbor belum ada di openSet, tambahkan.
+                            $f_score[$neighbor] = $g_score[$neighbor] + $heuristic;
+
+                            Log::info("💡 Update path ke $neighbor:");
+                            Log::info("→ g_score: {$g_score[$neighbor]} | h(n): $heuristic | f(n): {$f_score[$neighbor]}");
+
+
                             if (!isset($openSetHash[$neighbor])) {
                                 $openSet->insert($neighbor, -$f_score[$neighbor]);
                                 $openSetHash[$neighbor] = true;
@@ -79,8 +86,6 @@ class Astar
                     }
                 }
 
-                
-        // Jika loop selesai tapi goal tidak tercapai, berarti tidak ada rute.
         return null;
     }
 

@@ -25,7 +25,7 @@ class WarungController extends Controller
             $lat = $request->latitude;
             $lng = $request->longitude;
 
-            // Kalkulasi jarak dari lokasi user menggunakan Haversine Formula (misalnya dalam 5km)
+            // Menghitung jarak dari lokasi user pake Haversine Formula 
             $warung = DataWarung::select('*')
                 ->selectRaw('(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance',
                     [$lat, $lng, $lat])
@@ -49,7 +49,7 @@ class WarungController extends Controller
             $userLng = $request->input('lng');
             $warungs = DataWarung::all();
 
-            $best = SkorWarung::cari($userLat, $userLng, $warungs,12);
+            $best = SkorWarung::cari($userLat, $userLng, $warungs,36);
 
             if (empty($best)) {
                 return response()->json([
@@ -156,10 +156,8 @@ class WarungController extends Controller
 
     public function sherinDemo()
         {
-            // Panggil metode statis buildgraph dari class sherinGraph
             $graphData = Graph::buildgraph();
 
-            // Kembalikan data dalam format JSON, sesuai yang diharapkan oleh JavaScript
             return response()->json([
                 'status' => 'success',
                 'graph' => $graphData
@@ -167,10 +165,8 @@ class WarungController extends Controller
         }
     public function liaDemo()
         {
-            // Panggil metode statis buildgraph dari class sherinGraph
             $graphData = Graph2::buildgraph();
 
-            // Kembalikan data dalam format JSON, sesuai yang diharapkan oleh JavaScript
             return response()->json([
                 'status' => 'success',
                 'graph' => $graphData

@@ -30,14 +30,12 @@
     <section class="mb-12">
             <h2 class="text-2xl font-semibold text-center mb-6">Demo Graph</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                <!-- Tombol Lokasi Sherin -->
                 <div id="sherin" class="bg-[#161b22] p-6 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:bg-[#21262d] hover:ring-2 hover:ring-[#8b5cf6]">
-                    <h3 class="text-xl font-bold text-center">Sherin</h3>
+                    <h3 class="text-xl font-bold text-center">Lokasi Pertama</h3>
                     <p class="text-center text-sm text-gray-400 mt-1">(-7.5520, 110.8651)</p>
                 </div>
-                <!-- Tombol Lokasi Lia -->
                 <div id="lia" class="bg-[#161b22] p-6 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:bg-[#21262d] hover:ring-2 hover:ring-[#8b5cf6]">
-                    <h3 class="text-xl font-bold text-center">Lia</h3>
+                    <h3 class="text-xl font-bold text-center">Lokasi Kedua</h3>
                     <p class="text-center text-sm text-gray-400 mt-1">(-7.5580, 110.8645)</p>
                 </div>
             </div>
@@ -61,7 +59,7 @@
     </section>
 
     <footer class="text-center text-sm py-6 mt-10 text-[#9ca3af] border-t border-[#2d333b]">
-        &copy; 2025 WarungMurah. Made with love :<.
+        &copy; 2025 WarungMurah. Made with love :'<.
     </footer>
 
 </body>

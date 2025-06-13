@@ -52,49 +52,51 @@ class Graph{
         $edges =[];
 
         $connection = [
-            ['user','A'],
-            ['A','B'],
-            ['A','E'],
-            ['B','C'],
-            ['B','G'],
-            ['C','D'],
-            ['D','G'],
-            ['D','I'],
-            ['D','K'],
-            ['E','F'],
-            ['F','H'],
-            ['G','H'],
-            ['H','L'],
-            ['I','J'],
-            ['J','K'],
-            ['J','O'],
-            ['K','N'],
-            ['L','M'],
-            ['M','N'],
-            ['M','R'],
-            ['N','Q'],
-            ['N','O'],
-            ['O','P'],
-            ['P','V'],
-            ['P','Q'],
-            ['Q','U'],
-            ['Q','R'],
-            ['R','S'],
-            ['S','warung'],
-            ['U','warung'],
-            ['V','W'],
-            ['W','U'],
+            ['user','A',8],
+            ['A','B',8],
+            ['A','E',8],
+            ['B','C',6],
+            ['B','G',6],
+            ['C','D',8],
+            ['D','G',7],
+            ['D','I',8],
+            ['D','K',9],
+            ['E','F',7],
+            ['F','H',8],
+            ['G','H',7],
+            ['H','L',8],
+            ['I','J',8],
+            ['J','K',7],
+            ['J','O',8],
+            ['K','N',9],
+            ['L','M',8],
+            ['M','N',7],
+            ['M','R',8],
+            ['N','Q',9],
+            ['N','O',7],
+            ['O','P',9],
+            ['P','V',8],
+            ['P','Q',7],
+            ['Q','U',9],
+            ['Q','R',6],
+            ['R','S',8],
+            ['S','warung',9],
+            ['U','warung',9],
+            ['V','W',8],
+            ['W','U',9],
         ];
 
-        foreach ($connection as [$from, $to]) {
+
+        foreach ($connection as [$from, $to, $rating]) {
             $lat1 = $nodes[$from]['lat'];
             $lng1 = $nodes[$from]['lng'];
             $lat2 = $nodes[$to]['lat'];
             $lng2 = $nodes[$to]['lng'];
 
-            $cost = self::Haversine($lat1, $lng1, $lat2, $lng2);
+            $jarak = self::Haversine($lat1, $lng1, $lat2, $lng2);
+            $pinalti = 1 + ((10 - $rating)/10);
+            $cost = $jarak * $pinalti;
             $edges[] = ['from' => $from, 'to' => $to, 'cost' => $cost];
-            
         }
 
         return [

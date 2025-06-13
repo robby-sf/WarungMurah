@@ -9,6 +9,13 @@ function clearGraphLayers(map) {
     graphEdgeLayers = [];
 }
 
+const customIcon = L.icon({
+    iconUrl: '/asset/logoResto.png',
+    iconSize: [40, 40], 
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
+});
+
 function drawAStar(graph,map, astarPath =null){
     clearGraphLayers(map);
 
@@ -34,8 +41,8 @@ function drawAStar(graph,map, astarPath =null){
     for (const nodeId in nodes) {
         const node = nodes[nodeId];
         const circle = L.circle([node.lat, node.lng], {
-            color: '#c026d3', // Warna ungu tua untuk garis
-            fillColor: '#f0abfc', // Warna ungu muda untuk isian
+            color: '#c026d3',
+            fillColor: '#f0abfc',
             fillOpacity: 0.9,
             radius: 3 // Radius dalam meter
         }).addTo(map);
@@ -140,10 +147,10 @@ document.addEventListener("DOMContentLoaded", () =>{
         window.userMarker.setLatLng([latitude,longitude]);
         window.userMarker.setPopupContent("<b>Lokasi Anda</b>").openPopup();
 
-        // Panggil kedua endpoint secara bersamaan
-            Promise.all([
-                    fetch('/sherin').then(res => res.json()), // graph
-                    fetch('/get-astar-route')
+        // Panggil kedua endpoint bersamaan
+        Promise.all([
+                    fetch('/sherin').then(res => res.json()), // graph koordinat sherin
+                    fetch('/get-astar-route') //gambar rute graphnya
                     .then(res => {
         console.log("Respons mentah dari /get-astar-route:", res);
 
@@ -242,8 +249,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     cariBtn.addEventListener("click", () => {
-        const latitude = -7.558067551108021;
-        const longitude = 110.85081864147803;
+        const latitude = -7.55206205800333;
+        const longitude = 110.86513433907469;
         console.log("Menggunakan lokasi default:", latitude, longitude);
 
         window.userLocation = {
@@ -251,17 +258,15 @@ document.addEventListener("DOMContentLoaded", () => {
             lng: longitude
         };
 
-        // Pindahkan map ke lokasi default
         map.setView([latitude, longitude], 15);
 
-        // Tambahkan marker lokasi default
+        // marker default
         if (window.userMarker) map.removeLayer(window.userMarker);
         window.userMarker = L.marker([latitude, longitude])
             .addTo(map)
             .bindPopup("Lokasi Default")
             .openPopup();
 
-        // Kirim lokasi ke server
         const token = document.querySelector('meta[name="csrf-token"]').content;
 
         fetch('/lokasi', {
@@ -274,7 +279,6 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .then(res => res.json())
         .then(lokasiData => {
-            // Panggil endpoint rekomendasi
             fetch(`/cari?lat=${latitude}&lng=${longitude}`)
                 .then(res => res.json())
                 .then(rekomendasiData => {
@@ -301,6 +305,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <button class="group flex flex-col h-full min-h-[260px] w-full rounded-2xl bg-gray-800 border-2 border-transparent shadow-lg transition-all duration-300 hover:bg-[#21262d] hover:ring-2 hover:ring-[#8b5cf6]">
                     <div class="flex flex-col flex-grow p-6">
+                        <p> ${warung.id}</p>
                         <h5 class="mb-3 text-lg font-semibold text-white line-clamp-2">${warung.name}</h5>
 
                         <div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-400">
@@ -326,10 +331,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const button = card.querySelector("button");
             button.addEventListener("click", () => {
+                clearGraphLayers(map);
                 tampilkanRute(warung.latitude, warung.longitude);
+
             });
 
-            // Tambah marker juga
             L.marker([warung.latitude, warung.longitude])
                 .addTo(map)
                 .bindPopup(`<b>${warung.name}</b><br>Rating: ${warung.rating}/5`);
